@@ -1,33 +1,88 @@
 import './styles.scss';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; // Corrected import path
 
-import p5 from 'p5';
+// Constants
+const NUM_LINES = 10;
+const RADIUS = 3;
+const START_DISTANCE_FACTOR = 0.1;
 
-new p5(sketch);
+// Create a scene
+const scene = new THREE.Scene();
 
-function sketch(p) {
-	let r = Math.min(p.windowWidth / 3, p.windowHeight / 3);
-	let t = 0;
-	let x, y;
+// Create a camera
+const camera = new THREE.PerspectiveCamera(
+	75,
+	window.innerWidth / window.innerHeight,
+	0.1,
+	1000
+);
+camera.position.z = 5;
 
-	p.setup = () => {
-		p.createCanvas(p.windowWidth, p.windowHeight);
-	};
+// Create a renderer
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-	p.draw = () => {
-		p.background(200);
+// Create gizmo
+const gizmo = new THREE.AxesHelper(2); // Length of axes lines is 2 units
+scene.add(gizmo);
 
-		x = p.windowWidth / 2 + r * p.cos(p.TWO_PI * t);
-		y = p.windowHeight / 2 + r * p.sin(p.TWO_PI * t);
+// Create lines
+for (let i = 0; i < NUM_LINES; i++) {
+	const angle = (i / NUM_LINES) * Math.PI * 2;
+	const startPoint = new THREE.Vector3(0, 0, 0);
+	const endPoint = new THREE.Vector3(
+		Math.cos(angle) * RADIUS,
+		Math.sin(angle) * RADIUS,
+		0
+	);
+	const newStartPoint = calculateNewStartPoint(
+		startPoint,
+		endPoint,
+		START_DISTANCE_FACTOR
+	);
+	const line = createLine(newStartPoint, endPoint);
+	scene.add(line);
+}
 
-		p.ellipse(x, y, 10, 10);
-		p.noStroke();
-		p.fill(255, 0, 0);
+// Create OrbitControls
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.update();
 
-		t += 0.01;
-	};
+// Event listeners
+window.addEventListener('resize', onWindowResize);
 
-	p.windowResized = () => {
-		p.resizeCanvas(p.windowWidth, p.windowHeight);
-		r = Math.min(p.windowWidth / 3, p.windowHeight / 3);
-	};
+// Render loop
+animate();
+
+function calculateNewStartPoint(startPoint, endPoint, factor) {
+	const direction = endPoint.clone().normalize();
+	return startPoint.clone().addScaledVector(direction, RADIUS * factor);
+}
+
+function createLine(startPoint, endPoint) {
+	const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+		startPoint,
+		endPoint,
+	]);
+	const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+	return new THREE.Line(lineGeometry, lineMaterial);
+}
+
+function render() {
+	renderer.render(scene, camera);
+}
+
+function onWindowResize() {
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	render();
+}
+
+function animate() {
+	requestAnimationFrame(animate);
+	controls.update();
+	render();
 }

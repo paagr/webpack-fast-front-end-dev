@@ -208,7 +208,7 @@ const imgH = 520;
 // 	});
 // };
 
-const searchTerms = ['night', 'flowers', 'design', 'nature', 'burlesque', 'lingerie', 'woman'];
+const searchTerms = ['night', 'developer', 'design', 'code', 'javascript', 'typography', 'party', 'dj', 'singer'];
 
 const getRandomSearchTerm = () => {
 	return searchTerms[Math.floor(Math.random() * searchTerms.length)];

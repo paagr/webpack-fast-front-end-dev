@@ -1,88 +1,309 @@
+// import './styles.scss';
+
+// import gsap from 'gsap';
+
+// const isTouchDevice = 'ontouchstart' in window;
+
+// const imgW = 520;
+// const imgH = 520;
+
+// const createImagePop = () => {
+// 	let lastX = -Infinity;
+// 	let lastY = -Infinity;
+
+// 	const imgContainer = document.querySelector('.img-container');
+// 	const images = imgContainer.querySelectorAll('.img-cursor');
+
+// 	let ongoingX = null;
+// 	let ongoingTime = null;
+// 	let velocity = 0;
+
+// 	window.addEventListener('mousemove', (e) => {
+// 		const { x, y } = e;
+
+// 		const currentTime = Date.now();
+// 		const currentX = e.pageX;
+
+// 		if (ongoingX !== null && ongoingTime !== null) {
+// 			const deltaTime = currentTime - ongoingTime;
+// 			const deltaX = currentX - ongoingX;
+// 			velocity = deltaX / deltaTime;
+// 		}
+
+// 		ongoingX = currentX;
+// 		ongoingTime = currentTime;
+
+// 		const distanceX = Math.abs(x - lastX);
+// 		const distanceY = Math.abs(y - lastY);
+// 		if (distanceX >= 55 || distanceY >= 55) {
+// 			lastX = x;
+// 			lastY = y;
+
+// 			const randomIndex = Math.floor(Math.random() * images.length);
+// 			const randomImage = images[randomIndex];
+
+// 			if (randomImage) {
+// 				const image = randomImage.cloneNode(); // Create a clone of the randomly selected image
+// 				image.style.position = 'absolute';
+// 				image.style.width = `${imgW}px`;
+// 				image.style.height = `${imgH}px`;
+// 				image.style.objectFit = 'contain';
+// 				image.style.left = `${x - imgW / 2}px`;
+// 				image.style.top = `${y - imgH / 2}px`;
+
+// 				document.body.appendChild(image);
+
+// 				gsap.fromTo(
+// 					image,
+// 					{ scale: 0, rotation: 0 },
+// 					{
+// 						duration: 0.89,
+// 						scale: 1,
+// 						x: `+=${velocity * 55}`,
+// 						y: `+=${velocity * 55}`,
+// 						rotation: velocity * 2.33,
+// 						ease: 'power1.inOut',
+// 					}
+// 				);
+
+// 				setTimeout(() => {
+// 					gsap.to(image, {
+// 						duration: 1,
+// 						y: '+=100%',
+// 						opacity: 0,
+// 						onComplete: () => {
+// 							document.body.removeChild(image); // Remove the image after the animation completes
+// 						},
+// 					});
+// 				}, 3000);
+// 			}
+// 		}
+// 	});
+// };
+
+// if (!isTouchDevice) {
+// 	createImagePop();
+// }
+
+// import './styles.scss';
+// import gsap from 'gsap';
+
+// const isTouchDevice = 'ontouchstart' in window;
+
+// const imgW = 520;
+// const imgH = 520;
+
+// const getUnsplashImage = () => {
+// 	return new Promise((resolve, reject) => {
+// 		const imageUrl = 'https://source.unsplash.com/random';
+// 		const image = new Image();
+// 		image.onload = () => {
+// 			resolve(image.src);
+// 		};
+// 		image.onerror = (error) => {
+// 			reject(error);
+// 		};
+// 		image.src = imageUrl;
+// 	});
+// };
+
+// const createImagePop = () => {
+// 	let lastX = -Infinity;
+// 	let lastY = -Infinity;
+
+// 	const imgContainer = document.querySelector('.img-container');
+
+// 	let ongoingX = null;
+// 	let ongoingTime = null;
+// 	let velocity = 0;
+
+// 	window.addEventListener('mousemove', async (e) => {
+// 		const { x, y } = e;
+
+// 		const currentTime = Date.now();
+// 		const currentX = e.pageX;
+
+// 		if (ongoingX !== null && ongoingTime !== null) {
+// 			const deltaTime = currentTime - ongoingTime;
+// 			const deltaX = currentX - ongoingX;
+// 			velocity = deltaX / deltaTime;
+// 		}
+
+// 		ongoingX = currentX;
+// 		ongoingTime = currentTime;
+
+// 		const distanceX = Math.abs(x - lastX);
+// 		const distanceY = Math.abs(y - lastY);
+// 		if (distanceX >= 55 || distanceY >= 55) {
+// 			lastX = x;
+// 			lastY = y;
+
+// 			const imageUrl = await getUnsplashImage(); // Fetch a new image URL from Unsplash
+// 			const image = new Image();
+// 			image.onload = () => {
+// 				image.style.position = 'absolute';
+// 				image.style.width = `${imgW}px`;
+// 				image.style.height = `${imgH}px`;
+// 				image.style.objectFit = 'contain';
+// 				image.style.left = `${x - imgW / 2}px`;
+// 				image.style.top = `${y - imgH / 2}px`;
+
+// 				document.body.appendChild(image);
+
+// 				gsap.fromTo(
+// 					image,
+// 					{ scale: 0, rotation: 0 },
+// 					{
+// 						duration: 0.89,
+// 						scale: 1,
+// 						x: `+=${velocity * 55}`,
+// 						y: `+=${velocity * 55}`,
+// 						rotation: velocity * 2.33,
+// 						ease: 'power1.inOut',
+// 					}
+// 				);
+
+// 				setTimeout(() => {
+// 					gsap.to(image, {
+// 						duration: 1,
+// 						y: '+=100%',
+// 						opacity: 0,
+// 						onComplete: () => {
+// 							document.body.removeChild(image); // Remove the image after the animation completes
+// 						},
+// 					});
+// 				}, 3000);
+// 			};
+// 			image.onerror = (error) => {
+// 				console.error('Error loading image:', error);
+// 			};
+// 			image.src = imageUrl;
+// 		}
+// 	});
+// };
+
+// if (!isTouchDevice) {
+// 	createImagePop();
+// }
+
 import './styles.scss';
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; // Corrected import path
+import gsap from 'gsap';
 
-// Constants
-const NUM_LINES = 10;
-const RADIUS = 3;
-const START_DISTANCE_FACTOR = 0.1;
+const isTouchDevice = 'ontouchstart' in window;
 
-// Create a scene
-const scene = new THREE.Scene();
+const imgW = 520;
+const imgH = 520;
 
-// Create a camera
-const camera = new THREE.PerspectiveCamera(
-	75,
-	window.innerWidth / window.innerHeight,
-	0.1,
-	1000
-);
-camera.position.z = 5;
+// const getUnsplashImage = () => {
+// 	return new Promise((resolve, reject) => {
+// 		const imageUrl = 'https://source.unsplash.com/random';
+// 		const image = new Image();
+// 		image.onload = () => {
+// 			resolve(image.src);
+// 		};
+// 		image.onerror = (error) => {
+// 			reject(error);
+// 		};
+// 		image.src = imageUrl;
+// 	});
+// };
 
-// Create a renderer
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+const searchTerms = ['night', 'flowers', 'design', 'nature', 'burlesque', 'lingerie', 'woman'];
 
-// Create gizmo
-const gizmo = new THREE.AxesHelper(2); // Length of axes lines is 2 units
-scene.add(gizmo);
+const getRandomSearchTerm = () => {
+	return searchTerms[Math.floor(Math.random() * searchTerms.length)];
+};
 
-// Create lines
-for (let i = 0; i < NUM_LINES; i++) {
-	const angle = (i / NUM_LINES) * Math.PI * 2;
-	const startPoint = new THREE.Vector3(0, 0, 0);
-	const endPoint = new THREE.Vector3(
-		Math.cos(angle) * RADIUS,
-		Math.sin(angle) * RADIUS,
-		0
-	);
-	const newStartPoint = calculateNewStartPoint(
-		startPoint,
-		endPoint,
-		START_DISTANCE_FACTOR
-	);
-	const line = createLine(newStartPoint, endPoint);
-	scene.add(line);
-}
+const getUnsplashImage = () => {
+	return new Promise((resolve, reject) => {
+		const searchTerm = getRandomSearchTerm();
+		const imageUrl = `https://source.unsplash.com/random/?${searchTerm}`;
+		const image = new Image();
+		image.onload = () => {
+			resolve(image.src);
+		};
+		image.onerror = (error) => {
+			reject(error);
+		};
+		image.src = imageUrl;
+	});
+};
 
-// Create OrbitControls
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.update();
+const createImagePop = async () => {
+	let lastX = -Infinity;
+	let lastY = -Infinity;
 
-// Event listeners
-window.addEventListener('resize', onWindowResize);
+	const imgContainer = document.querySelector('.img-container');
 
-// Render loop
-animate();
+	let ongoingX = null;
+	let ongoingTime = null;
+	let velocity = 0;
 
-function calculateNewStartPoint(startPoint, endPoint, factor) {
-	const direction = endPoint.clone().normalize();
-	return startPoint.clone().addScaledVector(direction, RADIUS * factor);
-}
+	window.addEventListener('mousemove', async (e) => {
+		const { x, y } = e;
 
-function createLine(startPoint, endPoint) {
-	const lineGeometry = new THREE.BufferGeometry().setFromPoints([
-		startPoint,
-		endPoint,
-	]);
-	const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
-	return new THREE.Line(lineGeometry, lineMaterial);
-}
+		const currentTime = Date.now();
+		const currentX = e.pageX;
 
-function render() {
-	renderer.render(scene, camera);
-}
+		if (ongoingX !== null && ongoingTime !== null) {
+			const deltaTime = currentTime - ongoingTime;
+			const deltaX = currentX - ongoingX;
+			velocity = deltaX / deltaTime;
+		}
 
-function onWindowResize() {
-	camera.aspect = window.innerWidth / window.innerHeight;
-	camera.updateProjectionMatrix();
-	renderer.setSize(window.innerWidth, window.innerHeight);
-	render();
-}
+		ongoingX = currentX;
+		ongoingTime = currentTime;
 
-function animate() {
-	requestAnimationFrame(animate);
-	controls.update();
-	render();
+		const distanceX = Math.abs(x - lastX);
+		const distanceY = Math.abs(y - lastY);
+		if (distanceX >= 55 || distanceY >= 55) {
+			lastX = x;
+			lastY = y;
+
+			const imageUrl = await getUnsplashImage(); // Fetch a new image URL from Unsplash
+			const image = new Image();
+			image.onload = () => {
+				image.style.position = 'absolute';
+				image.style.width = `${imgW}px`;
+				image.style.height = `${imgH}px`;
+				image.style.objectFit = 'contain';
+				image.style.left = `${x - imgW / 2}px`;
+				image.style.top = `${y - imgH / 2}px`;
+
+				document.body.appendChild(image);
+
+				gsap.fromTo(
+					image,
+					{ scale: 0, rotation: 0 },
+					{
+						duration: 0.89,
+						scale: 1,
+						x: `+=${velocity * 55}`,
+						y: `+=${velocity * 55}`,
+						rotation: velocity * 2.33,
+						ease: 'power1.inOut',
+					}
+				);
+
+				setTimeout(() => {
+					gsap.to(image, {
+						duration: 1,
+						y: '+=100%',
+						opacity: 0,
+						onComplete: () => {
+							document.body.removeChild(image); // Remove the image after the animation completes
+						},
+					});
+				}, 3000);
+			};
+			image.onerror = (error) => {
+				console.error('Error loading image:', error);
+			};
+			image.src = imageUrl;
+		}
+	});
+};
+
+if (!isTouchDevice) {
+	createImagePop();
 }

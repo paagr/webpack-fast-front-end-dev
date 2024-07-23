@@ -1,88 +1,58 @@
 import './styles.scss';
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; // Corrected import path
+import p5 from 'p5';
 
-// Constants
-const NUM_LINES = 10;
-const RADIUS = 3;
-const START_DISTANCE_FACTOR = 0.1;
+new p5(sketch);
 
-// Create a scene
-const scene = new THREE.Scene();
+function sketch(p) {
+	let numCols = 64;
+	let numRows = 8;
+	let iteration = 0;
+	let colors;
 
-// Create a camera
-const camera = new THREE.PerspectiveCamera(
-	75,
-	window.innerWidth / window.innerHeight,
-	0.1,
-	1000
-);
-camera.position.z = 5;
+	p.setup = () => {
+		p.createCanvas(p.windowWidth, p.windowHeight);
 
-// Create a renderer
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+		colors = [];
+		colors.push(p.color('#ff0000'));
+		colors.push(p.color('#ffff00'));
+		colors.push(p.color('#00ff00'));
+		colors.push(p.color('#00ffff'));
+		colors.push(p.color('#0000ff'));
+		colors.push(p.color('#ff00ff'));
+	}
 
-// Create gizmo
-const gizmo = new THREE.AxesHelper(2); // Length of axes lines is 2 units
-scene.add(gizmo);
+	p.draw = () => {
+		p.background(238);
+		p.noStroke();
 
-// Create lines
-for (let i = 0; i < NUM_LINES; i++) {
-	const angle = (i / NUM_LINES) * Math.PI * 2;
-	const startPoint = new THREE.Vector3(0, 0, 0);
-	const endPoint = new THREE.Vector3(
-		Math.cos(angle) * RADIUS,
-		Math.sin(angle) * RADIUS,
-		0
-	);
-	const newStartPoint = calculateNewStartPoint(
-		startPoint,
-		endPoint,
-		START_DISTANCE_FACTOR
-	);
-	const line = createLine(newStartPoint, endPoint);
-	scene.add(line);
-}
+		let duration = 64;
+		let progress = p.frameCount % duration;
+		if (progress === 0) iteration++;
 
-// Create OrbitControls
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.update();
+		let numRowsDrawn = numRows + 1 + iteration;
+		let rowH = p.height / numRows;
 
-// Event listeners
-window.addEventListener('resize', onWindowResize);
+		for (let y = 0; y < numRowsDrawn; y++) {
+			let targetY = p.height - (y + 1) * rowH + iteration + rowH;
+			let currentY = p.map(progress, 0, duration, targetY, targetY + rowH);
+			let yInfluence = p.map(currentY / numRows, 0, rowH, 1, numRows + 1) * 0.7;
+			let extraCols = Math.pow(2, yInfluence) - 1;
 
-// Render loop
-animate();
+			for (let x = 0; x < numCols; x++) {
+				if (targetY > p.height) continue;
 
-function calculateNewStartPoint(startPoint, endPoint, factor) {
-	const direction = endPoint.clone().normalize();
-	return startPoint.clone().addScaledVector(direction, RADIUS * factor);
-}
+				let colW = p.width / numCols;
+				let currentW = colW + extraCols * colW;
+				let posX = x * currentW - (extraCols * yInfluence + 1) * colW;
 
-function createLine(startPoint, endPoint) {
-	const lineGeometry = new THREE.BufferGeometry().setFromPoints([
-		startPoint,
-		endPoint,
-	]);
-	const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
-	return new THREE.Line(lineGeometry, lineMaterial);
-}
+				let amount = p.map(targetY % rowH, 0, rowH, 0, 1);
+				let c1 = colors[(y + x) % colors.length];
+				let c2 = colors[(y + x + 1) % colors.length];
+				let c = p.lerpColor(c1, c2, amount);
 
-function render() {
-	renderer.render(scene, camera);
-}
-
-function onWindowResize() {
-	camera.aspect = window.innerWidth / window.innerHeight;
-	camera.updateProjectionMatrix();
-	renderer.setSize(window.innerWidth, window.innerHeight);
-	render();
-}
-
-function animate() {
-	requestAnimationFrame(animate);
-	controls.update();
-	render();
+				p.fill(c);
+				p.rect(posX, currentY, currentW * 0.6, rowH);
+			}
+		}
+	}
 }

@@ -1,128 +1,88 @@
 import './styles.scss';
-import gsap from 'gsap';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'; // Corrected import path
 
-const isTouchDevice = 'ontouchstart' in window;
+// Constants
+const NUM_LINES = 13;
+const RADIUS = 5;
+const START_DISTANCE_FACTOR = 0.1;
 
-const imgW = 520;
-const imgH = 520;
+// Create a scene
+const scene = new THREE.Scene();
 
-const searchTerms = [
-	'night',
-	'model',
-	'girl',
-	'female',
-	'developer',
-	'design',
-	'code',
-	'javascript',
-	'typography',
-	'party',
-	'dj',
-];
+// Create a camera
+const camera = new THREE.PerspectiveCamera(
+	75,
+	window.innerWidth / window.innerHeight,
+	0.1,
+	1000
+);
+camera.position.z = 8;
 
-const getRandomSearchTerm = () => {
-	return searchTerms[Math.floor(Math.random() * searchTerms.length)];
-};
+// Create a renderer
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-const preloadImage = (url) => {
-	return new Promise((resolve, reject) => {
-		const image = new Image();
-		image.onload = () => {
-			resolve(url);
-		};
-		image.onerror = (error) => {
-			reject(error);
-		};
-		image.src = url;
-	});
-};
+// Create gizmo
+const gizmo = new THREE.AxesHelper(1); // Length of axes lines is 2 units
+scene.add(gizmo);
 
-const getUnsplashImage = () => {
-	return new Promise(async (resolve, reject) => {
-		const searchTerm = getRandomSearchTerm();
-		const imageUrl = `https://source.unsplash.com/random/?${searchTerm}`;
-		try {
-			await preloadImage(imageUrl); // Preload the image
-			resolve(imageUrl);
-		} catch (error) {
-			reject(error);
-		}
-	});
-};
+// Create lines
+for (let i = 0; i < NUM_LINES; i++) {
+	const angle = (i / NUM_LINES) * Math.PI * 2;
+	const startPoint = new THREE.Vector3(0, 0, 0);
+	const endPoint = new THREE.Vector3(
+		Math.cos(angle) * RADIUS,
+		Math.sin(angle) * RADIUS,
+		0
+	);
+	const newStartPoint = calculateNewStartPoint(
+		startPoint,
+		endPoint,
+		START_DISTANCE_FACTOR
+	);
+	const line = createLine(newStartPoint, endPoint);
+	scene.add(line);
+}
 
-const createImagePop = async () => {
-	let lastX = -Infinity;
-	let lastY = -Infinity;
+// Create OrbitControls
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.update();
 
-	let ongoingX = null;
-	let ongoingTime = null;
-	let velocity = 0;
+// Event listeners
+window.addEventListener('resize', onWindowResize);
 
-	window.addEventListener('mousemove', async (e) => {
-		const { x, y } = e;
+// Render loop
+animate();
 
-		const currentTime = Date.now();
-		const currentX = e.pageX;
+function calculateNewStartPoint(startPoint, endPoint, factor) {
+	const direction = endPoint.clone().normalize();
+	return startPoint.clone().addScaledVector(direction, RADIUS * factor);
+}
 
-		if (ongoingX !== null && ongoingTime !== null) {
-			const deltaTime = currentTime - ongoingTime;
-			const deltaX = currentX - ongoingX;
-			velocity = deltaX / deltaTime;
-		}
+function createLine(startPoint, endPoint) {
+	const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+		startPoint,
+		endPoint,
+	]);
+	const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+	return new THREE.Line(lineGeometry, lineMaterial);
+}
 
-		ongoingX = currentX;
-		ongoingTime = currentTime;
+function render() {
+	renderer.render(scene, camera);
+}
 
-		const distanceX = Math.abs(x - lastX);
-		const distanceY = Math.abs(y - lastY);
-		if (distanceX >= 55 || distanceY >= 55) {
-			lastX = x;
-			lastY = y;
+function onWindowResize() {
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	render();
+}
 
-			const imageUrl = await getUnsplashImage();
-			const image = new Image();
-			image.onload = () => {
-				image.style.position = 'absolute';
-				image.style.width = `${imgW}px`;
-				image.style.height = `${imgH}px`;
-				image.style.objectFit = 'contain';
-				image.style.left = `${x - imgW / 2}px`;
-				image.style.top = `${y - imgH / 2}px`;
-
-				document.body.appendChild(image);
-
-				gsap.fromTo(
-					image,
-					{ scale: 0, rotation: 0 },
-					{
-						duration: 0.89,
-						scale: 1,
-						x: `+=${velocity * 21}`,
-						y: `+=${velocity * 21}`,
-						rotation: velocity * 2.33,
-						ease: 'power1.inOut',
-					}
-				);
-
-				setTimeout(() => {
-					gsap.to(image, {
-						duration: 1,
-						y: '+=100%',
-						opacity: 0,
-						onComplete: () => {
-							document.body.removeChild(image);
-						},
-					});
-				}, 3000);
-			};
-			image.onerror = (error) => {
-				console.error('Error loading image:', error);
-			};
-			image.src = imageUrl;
-		}
-	});
-};
-
-if (!isTouchDevice) {
-	createImagePop();
+function animate() {
+	requestAnimationFrame(animate);
+	controls.update();
+	render();
 }

@@ -1,58 +1,128 @@
 import './styles.scss';
-import p5 from 'p5';
+import gsap from 'gsap';
 
-new p5(sketch);
+const isTouchDevice = 'ontouchstart' in window;
 
-function sketch(p) {
-	let numCols = 64;
-	let numRows = 8;
-	let iteration = 0;
-	let colors;
+const imgW = 520;
+const imgH = 520;
 
-	p.setup = () => {
-		p.createCanvas(p.windowWidth, p.windowHeight);
+const searchTerms = [
+	'night',
+	'model',
+	'girl',
+	'female',
+	'developer',
+	'design',
+	'code',
+	'javascript',
+	'typography',
+	'party',
+	'dj',
+];
 
-		colors = [];
-		colors.push(p.color('#ff0000'));
-		colors.push(p.color('#ffff00'));
-		colors.push(p.color('#00ff00'));
-		colors.push(p.color('#00ffff'));
-		colors.push(p.color('#0000ff'));
-		colors.push(p.color('#ff00ff'));
-	}
+const getRandomSearchTerm = () => {
+	return searchTerms[Math.floor(Math.random() * searchTerms.length)];
+};
 
-	p.draw = () => {
-		p.background(238);
-		p.noStroke();
+const preloadImage = (url) => {
+	return new Promise((resolve, reject) => {
+		const image = new Image();
+		image.onload = () => {
+			resolve(url);
+		};
+		image.onerror = (error) => {
+			reject(error);
+		};
+		image.src = url;
+	});
+};
 
-		let duration = 64;
-		let progress = p.frameCount % duration;
-		if (progress === 0) iteration++;
-
-		let numRowsDrawn = numRows + 1 + iteration;
-		let rowH = p.height / numRows;
-
-		for (let y = 0; y < numRowsDrawn; y++) {
-			let targetY = p.height - (y + 1) * rowH + iteration + rowH;
-			let currentY = p.map(progress, 0, duration, targetY, targetY + rowH);
-			let yInfluence = p.map(currentY / numRows, 0, rowH, 1, numRows + 1) * 0.7;
-			let extraCols = Math.pow(2, yInfluence) - 1;
-
-			for (let x = 0; x < numCols; x++) {
-				if (targetY > p.height) continue;
-
-				let colW = p.width / numCols;
-				let currentW = colW + extraCols * colW;
-				let posX = x * currentW - (extraCols * yInfluence + 1) * colW;
-
-				let amount = p.map(targetY % rowH, 0, rowH, 0, 1);
-				let c1 = colors[(y + x) % colors.length];
-				let c2 = colors[(y + x + 1) % colors.length];
-				let c = p.lerpColor(c1, c2, amount);
-
-				p.fill(c);
-				p.rect(posX, currentY, currentW * 0.6, rowH);
-			}
+const getUnsplashImage = () => {
+	return new Promise(async (resolve, reject) => {
+		const searchTerm = getRandomSearchTerm();
+		const imageUrl = `https://source.unsplash.com/random/?${searchTerm}`;
+		try {
+			await preloadImage(imageUrl); // Preload the image
+			resolve(imageUrl);
+		} catch (error) {
+			reject(error);
 		}
-	}
+	});
+};
+
+const createImagePop = async () => {
+	let lastX = -Infinity;
+	let lastY = -Infinity;
+
+	let ongoingX = null;
+	let ongoingTime = null;
+	let velocity = 0;
+
+	window.addEventListener('mousemove', async (e) => {
+		const { x, y } = e;
+
+		const currentTime = Date.now();
+		const currentX = e.pageX;
+
+		if (ongoingX !== null && ongoingTime !== null) {
+			const deltaTime = currentTime - ongoingTime;
+			const deltaX = currentX - ongoingX;
+			velocity = deltaX / deltaTime;
+		}
+
+		ongoingX = currentX;
+		ongoingTime = currentTime;
+
+		const distanceX = Math.abs(x - lastX);
+		const distanceY = Math.abs(y - lastY);
+		if (distanceX >= 55 || distanceY >= 55) {
+			lastX = x;
+			lastY = y;
+
+			const imageUrl = await getUnsplashImage();
+			const image = new Image();
+			image.onload = () => {
+				image.style.position = 'absolute';
+				image.style.width = `${imgW}px`;
+				image.style.height = `${imgH}px`;
+				image.style.objectFit = 'contain';
+				image.style.left = `${x - imgW / 2}px`;
+				image.style.top = `${y - imgH / 2}px`;
+
+				document.body.appendChild(image);
+
+				gsap.fromTo(
+					image,
+					{ scale: 0, rotation: 0 },
+					{
+						duration: 0.89,
+						scale: 1,
+						x: `+=${velocity * 21}`,
+						y: `+=${velocity * 21}`,
+						rotation: velocity * 2.33,
+						ease: 'power1.inOut',
+					}
+				);
+
+				setTimeout(() => {
+					gsap.to(image, {
+						duration: 1,
+						y: '+=100%',
+						opacity: 0,
+						onComplete: () => {
+							document.body.removeChild(image);
+						},
+					});
+				}, 3000);
+			};
+			image.onerror = (error) => {
+				console.error('Error loading image:', error);
+			};
+			image.src = imageUrl;
+		}
+	});
+};
+
+if (!isTouchDevice) {
+	createImagePop();
 }
